@@ -1,0 +1,66 @@
+{
+  "data": {
+    "rows": 913000,
+    "stores": 10,
+    "items": 50,
+    "date_min": "2013-01-01",
+    "date_max": "2017-12-31",
+    "series": 500
+  },
+  "config": {
+    "horizon_days": 90,
+    "lead_time_days": 7,
+    "service_level": 0.95,
+    "unit_cost": 8.0,
+    "holding_rate": 0.25,
+    "order_cost": 60.0
+  },
+  "eda": {
+    "avg_annual_growth_pct": 7.8,
+    "total_units_2017": 10733740,
+    "weekend_uplift_pct": 23.3,
+    "peak_month": 7,
+    "store_demand_ratio_max_min": 1.84
+  },
+  "forecast": {
+    "models": {
+      "Naive": {
+        "MAE": 12.73,
+        "WMAPE_pct": 25.21
+      },
+      "Seasonal naive": {
+        "MAE": 7.98,
+        "WMAPE_pct": 15.8
+      },
+      "ETS": {
+        "MAE": 9.83,
+        "WMAPE_pct": 19.46
+      },
+      "Global ML": {
+        "MAE": 5.75,
+        "WMAPE_pct": 11.39
+      }
+    },
+    "eval_series": 130,
+    "horizon_days": 90,
+    "best_model": "Global ML",
+    "ml_vs_snaive_error_reduction_pct": 27.9
+  },
+  "inventory": {
+    "lead_time_days": 7,
+    "service_target": 0.95,
+    "avg_safety_stock_forecast": 46.0,
+    "avg_safety_stock_historical": 91.1,
+    "safety_stock_reduction_pct": 49.5,
+    "avg_eoq_units": 1038.8,
+    "sim_fill_rate_forecast": 98.23,
+    "sim_fill_rate_historical": 99.65,
+    "sim_avg_inventory_forecast": 258.12,
+    "sim_avg_inventory_historical": 297.01,
+    "annual_holding_cost_forecast": 258118.0,
+    "annual_holding_cost_historical": 297015.0,
+    "annual_holding_savings": 38897.0,
+    "holding_savings_pct": 13.1,
+    "top20pct_revenue_share": 34.3
+  }
+}

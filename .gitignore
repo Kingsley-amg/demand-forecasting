@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+
+# Working video frames (if any)
+video/
+*.mp4

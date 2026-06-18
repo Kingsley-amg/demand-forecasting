@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demand Forecasting and Inventory Optimisation</title>
+<style>
+  :root{
+    --ink:#1d3a34; --teal:#2a9d8f; --gold:#e9b949; --coral:#e76f51;
+    --mut:#9ec7bd; --bg:#f7faf9; --card:#ffffff; --line:#e3ece9; --text:#243b37;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       color:var(--text);background:var(--bg);line-height:1.6}
+  header{background:var(--ink);color:#fff;padding:54px 22px 46px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px}
+  header h1{margin:0 0 8px;font-size:30px}
+  header p{margin:6px 0;color:#cfe3dd;font-size:17px}
+  .tags{margin-top:16px}
+  .tag{display:inline-block;background:#2a5048;color:#dff1ec;border-radius:20px;
+       padding:5px 13px;font-size:13px;margin:4px 6px 0 0}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;
+       padding:18px;text-align:center}
+  .kpi .n{font-size:26px;font-weight:800;color:var(--teal)}
+  .kpi .l{font-size:12.5px;color:#5d736e;margin-top:4px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
+          padding:26px;margin:22px 0}
+  h2{color:var(--ink);margin:0 0 4px;font-size:22px}
+  h2 .num{color:var(--gold);margin-right:8px}
+  img{width:100%;border:1px solid var(--line);border-radius:10px;margin:14px 0}
+  .note{background:#f1f7f5;border-left:4px solid var(--teal);border-radius:0 8px 8px 0;
+        padding:12px 16px;margin:10px 0;font-size:15px}
+  .note b{color:var(--ink)}
+  .mean{background:#fdf6e9;border-left:4px solid var(--gold)}
+  .rec{background:#fbeee9;border-left:4px solid var(--coral)}
+  ul{margin:8px 0}
+  footer{text-align:center;color:#6a807b;font-size:14px;padding:30px}
+  a{color:var(--teal)}
+  @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Demand Forecasting and Inventory Optimisation</h1>
+    <p>Forecasting daily sales for 500 store-item combinations, then turning the
+       forecast into smarter stocking decisions that cut inventory cost while
+       protecting availability.</p>
+    <p style="font-size:15px">Kingsley Amegah &middot; Data Scientist</p>
+    <div class="tags">
+      <span class="tag">Python</span><span class="tag">scikit-learn</span>
+      <span class="tag">statsmodels</span><span class="tag">Time series</span>
+      <span class="tag">Gradient boosting</span><span class="tag">Inventory theory</span>
+      <span class="tag">Simulation</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="kpis">
+    <div class="kpi"><div class="n">913k</div><div class="l">daily sales records (2013-2017)</div></div>
+    <div class="kpi"><div class="n">11.4%</div><div class="l">forecast error (WMAPE), 90-day test</div></div>
+    <div class="kpi"><div class="n">-50%</div><div class="l">safety stock needed</div></div>
+    <div class="kpi"><div class="n">-13%</div><div class="l">inventory at the same service</div></div>
+  </div>
+
+  <section>
+    <h2>The business problem</h2>
+    <p>Every retailer faces the same tension. Hold too little stock and you get
+       stockouts: lost sales and frustrated customers. Hold too much and you tie
+       up cash, fill the warehouse and risk markdowns and waste. Getting this
+       right depends on one thing above all: <b>how accurately you can predict
+       demand</b>, and how well that prediction is turned into reorder decisions.</p>
+    <p>Using a real public dataset of <b>five years of daily sales for 10 stores
+       and 50 items</b> (913,000 records), this project does three things: it
+       learns the demand patterns, it builds and tests a forecasting model against
+       strong benchmarks, and it converts the forecast into an inventory policy
+       whose value is measured in a simulation.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">1</span>How demand behaves</h2>
+    <img src="img/fig1_trend.png" alt="Total daily sales trend">
+    <div class="note"><b>What this shows.</b> Total units sold every day across the
+       whole network, with a 30-day average over it. Demand rises steadily, about
+       7.8% per year, with a strong repeating annual wave.</div>
+    <div class="note mean"><b>What it means.</b> A forecast cannot just repeat last
+       week. It has to capture the upward trend and the yearly seasonal shape, or
+       it will run low in the busy season and overstock in the quiet one.</div>
+
+    <img src="img/fig2_seasonality.png" alt="Weekly and monthly seasonality">
+    <div class="note"><b>What this shows.</b> The average day-of-week pattern (left)
+       and month-of-year pattern (right). Weekends sell about 23% more than
+       weekdays, and demand peaks in the summer (July).</div>
+    <div class="note mean"><b>What it means.</b> These two rhythms, weekly and
+       yearly, are the backbone of the forecast. Staffing and deliveries should
+       lean into weekends and the summer peak.</div>
+
+    <img src="img/fig3_store_item.png" alt="Demand by store and item">
+    <div class="note"><b>What this shows.</b> Average daily demand for every
+       store-item pair. Some items and stores sell many times more than others
+       (the busiest store sells about 1.8 times the quietest).</div>
+    <div class="note mean"><b>What it means.</b> A single blanket stocking rule
+       would be wrong almost everywhere. Each of the 500 series needs its own
+       forecast and its own buffer.</div>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>Forecasting: testing four models honestly</h2>
+    <p>To know a forecast is good you must test it on data it has never seen. I held
+       out the <b>last 90 days</b> and compared four approaches, from simple to
+       advanced. All features used by the machine-learning model are at least 90
+       days old, so it never peeks into the period it is predicting.</p>
+    <img src="img/fig4_model_comparison.png" alt="Model comparison">
+    <div class="note"><b>What this shows.</b> The error of each model on the unseen
+       90 days, measured by WMAPE (weighted mean absolute percentage error, lower
+       is better). <b>Naive</b> repeats the last value; <b>seasonal naive</b>
+       repeats the value from a year ago; <b>ETS</b> is a classical
+       trend-plus-seasonality model; <b>Global ML</b> is a single gradient-boosting
+       model trained across all 500 series with calendar and lag features.</div>
+    <div class="note mean"><b>What it means.</b> The machine-learning model wins
+       clearly at 11.4% error, about 28% more accurate than the strong
+       seasonal-naive benchmark. Learning from all series at once lets it borrow
+       patterns that a single-series model misses.</div>
+
+    <img src="img/fig5_forecast_example.png" alt="Forecast vs actual example">
+    <div class="note"><b>What this shows.</b> One store-item over the final months.
+       The shaded area is the 90-day test window the model never saw; the orange
+       line is its forecast against the real sales in black.</div>
+    <div class="note mean"><b>What it means.</b> The model tracks both the weekly
+       up-and-down and the December slowdown, not just the average level. That
+       day-level accuracy is what makes the inventory step below possible.</div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>From forecast to inventory decisions</h2>
+    <p>A forecast only creates value when it changes a decision. I convert each
+       forecast into a weekly <b>order-up-to</b> policy: every week, top each
+       store-item back up to a level that covers expected demand over the
+       reorder cycle plus a <b>safety stock</b> buffer sized for a 95% service
+       target. The size of that buffer depends directly on how uncertain the
+       forecast is.</p>
+    <img src="img/fig6_safety_stock.png" alt="Safety stock comparison">
+    <div class="note"><b>What this shows.</b> The average safety-stock buffer needed
+       per store-item to hit 95% service. The grey bar sizes the buffer from raw
+       historical demand swings; the teal bar sizes it from the machine-learning
+       forecast error instead.</div>
+    <div class="note mean"><b>What it means.</b> Because the model already explains
+       the weekly and seasonal swings, the leftover uncertainty is far smaller, so
+       the buffer can be roughly <b>half the size</b> for the same service promise.</div>
+
+    <img src="img/fig7_simulation.png" alt="Inventory simulation">
+    <div class="note"><b>What this shows.</b> A day-by-day simulation of the weekly
+       reorder policy across all 500 store-items over the 90-day test period, run
+       two ways: stocking from historical variability (grey) versus from the
+       forecast (teal). Left is the service level actually achieved; right is the
+       average inventory held.</div>
+    <div class="note mean"><b>What it means.</b> Both policies clear the 95% target,
+       but the forecast-driven policy does it with <b>13% less inventory on hand</b>.
+       The historical policy reaches 99.6% only by overstocking, capital that earns
+       nothing. Same promise to the customer, far less cash frozen on shelves.</div>
+
+    <img src="img/fig8_pareto.png" alt="Demand concentration">
+    <div class="note"><b>What this shows.</b> The cumulative share of revenue when
+       store-items are ranked from busiest to quietest.</div>
+    <div class="note mean"><b>What it means.</b> The top 20% of store-items drive
+       about 34% of revenue. Forecasting and buffering effort should be tightest on
+       this vital few, where errors cost the most.</div>
+  </section>
+
+  <section>
+    <h2>Recommendations</h2>
+    <div class="note rec"><b>1. Adopt the machine-learning forecast for replenishment.</b>
+       At 11.4% error it is about 28% more accurate than the current-practice
+       benchmark, and it scales to all 500 series from one model.</div>
+    <div class="note rec"><b>2. Re-size safety stock from forecast error, not raw
+       demand swings.</b> This roughly halves the buffer and cuts inventory about
+       13% while still meeting the 95% service target, freeing working capital.</div>
+    <div class="note rec"><b>3. Differentiate by importance.</b> Hold the tightest
+       service and the closest monitoring on the top 20% of store-items that drive
+       a third of revenue; relax slightly on the long tail.</div>
+    <div class="note rec"><b>4. Validate live before full rollout.</b> Pilot on a
+       sample of stores, track realised service and inventory for a quarter, then
+       scale. Re-train the model regularly as demand shifts.</div>
+  </section>
+
+  <section>
+    <h2>Method and honest limitations</h2>
+    <ul>
+      <li><b>Data.</b> Store Item Demand Forecasting Challenge (Kaggle), a real,
+        public dataset: 10 stores, 50 items, daily sales 2013-2017, no missing values.</li>
+      <li><b>Forecasting.</b> A global <code>HistGradientBoostingRegressor</code>
+        with calendar features and lags of 90 days or more (so it never leaks the
+        future), benchmarked against naive, seasonal-naive and ETS on a 90-day holdout.</li>
+      <li><b>Inventory.</b> Periodic-review order-up-to policy, 7-day lead time,
+        95% target service, evaluated in a day-by-day reorder simulation.</li>
+      <li><b>Assumptions.</b> The cost figures use an assumed unit cost, holding
+        rate and order cost; the percentage improvements (accuracy, safety stock,
+        inventory) do not depend on those assumptions. Lead time is treated as
+        fixed; real lead-time variability would call for a slightly larger buffer.</li>
+    </ul>
+  </section>
+
+</div>
+
+<footer>
+  Built in Python (pandas, scikit-learn, statsmodels) from open data.<br>
+  Kingsley Amegah &middot;
+  <a href="https://github.com/Kingsley-amg/demand-forecasting">Code and full report on GitHub</a>
+</footer>
+</body>
+</html>
